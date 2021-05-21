@@ -8,7 +8,7 @@ import (
 )
 
 func (s Service) pullImages() error {
-	logger := s.logger
+	logger := s.Logger
 	logger.Info("pulling script images")
 	for _, script := range s.scripts {
 		if len(script.Image) == 0 {
@@ -25,7 +25,7 @@ func (s Service) pullImages() error {
 
 func (s Service) pullImage(script model.ScriptConfiguration) error {
 	imgPath := script.GetImagePath()
-	logger := s.logger.WithField("image", imgPath)
+	logger := s.Logger.WithField("image", imgPath)
 	logger.Info("checking image in cache")
 
 	if s.checkImage(imgPath) {

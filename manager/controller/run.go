@@ -11,7 +11,7 @@ import (
 )
 
 func (s Service) Run(name string) *model.ScriptOutput {
-	logger := s.logger.WithField("script", name)
+	logger := s.Logger.WithField("script", name)
 	logger.Debug("searching for script name on service")
 	script, found := s.scripts[name]
 	if !found {

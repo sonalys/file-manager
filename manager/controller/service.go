@@ -11,7 +11,7 @@ type Service struct {
 	rules    []model.Rule
 	scripts  map[string]model.ScriptConfiguration
 	executor Executor
-	logger   *logrus.Logger
+	Logger   *logrus.Logger
 	ctx      context.Context
 }
 
@@ -28,7 +28,7 @@ func NewService(ctx context.Context, c model.Config) *Service {
 		ctx:      ctx,
 		scripts:  c.Scripts,
 		rules:    c.Rules,
-		logger:   logger,
+		Logger:   logger,
 		executor: newExecutor(logger),
 	}
 

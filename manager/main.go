@@ -8,6 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sonalys/file-manager/manager/controller"
+	"github.com/sonalys/file-manager/manager/handler"
 	"github.com/sonalys/file-manager/manager/model"
 	"github.com/sonalys/file-manager/manager/util"
 )
@@ -20,7 +21,10 @@ func main() {
 		panic(err)
 	}
 
-	_ = controller.NewService(ctx, config)
+	s := controller.NewService(ctx, config)
+
+	handler := handler.NewHandler(s)
+	go handler.Start()
 
 	gracefulShutdown := make(chan os.Signal, 1)
 	signal.Notify(gracefulShutdown, syscall.SIGINT, syscall.SIGTERM)
