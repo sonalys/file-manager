@@ -7,14 +7,15 @@
     "compress2heic": {
       "image": "file-manager/imagemagick",
       "version": "v0.0.1",
-      "command": "convert -quality 65 1.jpg 1.heic",
+      "parameters": ["convert", "-quality", "65", "/buffer/%filename.%extension", "/buffer/%filename.heic"],
+      "binary": "docker",
       "timeout": "5s"
     }
   },
   "rules": [
     {
       "match": {
-        "filename": "*.(jpg|jpeg|bmp|png)"
+        "filename": ".*\\.(jpg|jpeg|bmp|png)"
       },
       "pipeline": ["compress2heic"]
     }

@@ -11,4 +11,5 @@ type ScriptOutput struct {
 	Log           string        `json:"log"`            // Register of the script stdout and stderr.
 	StatusCode    int           `json:"status_code"`    // Status returned from the script execution.
 	ExecutionTime time.Duration `json:"execution_time"` // Time spent running the script.
+	MovedTo       string        `json:"moved_to"`       // When the file is renamed or moved.
 }

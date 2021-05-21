@@ -12,6 +12,8 @@ import (
 	"github.com/sonalys/file-manager/manager/model"
 )
 
+// ResolvePath is a security validator to avoid reaching system files.
+// It also resolves any mounts configured on the service.
 func (s Service) ResolvePath(destination, filename string) (string, error) {
 	if strings.Contains(destination, "../") {
 		return "", errors.New("invalid path: cannot include ../")
@@ -63,7 +65,7 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) err
 		}
 
 		for _, scriptName := range rule.Pipeline {
-			output := s.Run(scriptName)
+			output := s.Run(scriptName, filename)
 			if output == nil {
 				continue
 			}

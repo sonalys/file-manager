@@ -3,17 +3,16 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sonalys/file-manager/manager/model"
 )
 
-func (s Service) Run(name string) *model.ScriptOutput {
-	logger := s.Logger.WithField("script", name)
+func (s Service) Run(scriptName, filename string) *model.ScriptOutput {
+	logger := s.Logger.WithField("script", scriptName)
 	logger.Debug("searching for script name on service")
-	script, found := s.scripts[name]
+	script, found := s.scripts[scriptName]
 	if !found {
 		logger.Error("script not found")
 		return nil
@@ -31,9 +30,10 @@ func (s Service) Run(name string) *model.ScriptOutput {
 	defer cancel()
 
 	logger.Info("started script")
-	output, err := s.executor.Run(timeoutCtx, script.GetCommand())
+	binary, parameters := script.GetCommand(filename)
+	output, err := s.executor.Run(timeoutCtx, binary, parameters...)
 	if err != nil {
-		logger.Error(errors.Wrap(err, fmt.Sprintf("failed to execute script command %s", name)))
+		logger.Error(errors.Wrap(err, "failed to execute script command"))
 		return nil
 	}
 
