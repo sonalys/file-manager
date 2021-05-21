@@ -9,7 +9,7 @@ import (
 	"github.com/sonalys/file-manager/manager/model"
 )
 
-func (s Service) Run(scriptName, filename string) *model.UploadData {
+func (s Service) Run(scriptName string, upload model.UploadData) *model.UploadData {
 	logger := s.Logger.WithField("script", scriptName)
 	logger.Debug("searching for script name on service")
 	script, found := s.scripts[scriptName]
@@ -30,7 +30,7 @@ func (s Service) Run(scriptName, filename string) *model.UploadData {
 	defer cancel()
 
 	logger.Info("started script")
-	binary, parameters := script.GetCommand(filename)
+	binary, parameters := script.GetCommand(scriptName, upload)
 	output, err := s.executor.Run(timeoutCtx, binary, parameters...)
 	if err != nil {
 		logger.Error(errors.Wrap(err, "failed to execute script command"))

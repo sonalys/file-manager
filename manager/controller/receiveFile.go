@@ -34,7 +34,7 @@ func (s Service) ResolvePath(d *model.UploadData) (string, error) {
 	if !found {
 		return "", errors.New("invalid mount")
 	}
-	return fmt.Sprintf("%s/%s/%s", resolve, splitPath[1], d.Filename), nil
+	return fmt.Sprintf("%s/%s/%s", resolve, splitPath[1], d.GetFullName()), nil
 }
 
 func (s Service) ReceiveFile(reader io.Reader, filename, destination string) (*model.UploadData, error) {
@@ -71,7 +71,7 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) (*m
 		}
 
 		for _, scriptName := range rule.Pipeline {
-			newUploadData := s.Run(scriptName, filename)
+			newUploadData := s.Run(scriptName, *uploadData)
 			if newUploadData != nil {
 				uploadData = newUploadData
 			}
@@ -82,7 +82,8 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) (*m
 			return nil, errors.Wrap(err, "failed to encode metadata")
 		}
 
-		err = os.WriteFile(fmt.Sprintf("%s.metadata", uploadData.GetFullPath()), encodedOutput, os.ModeDevice)
+		resolvedPath, _ := s.ResolvePath(uploadData)
+		err = os.WriteFile(fmt.Sprintf("%s.metadata", resolvedPath), encodedOutput, os.ModeDevice)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create metadata in destination")
 		}

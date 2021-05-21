@@ -45,6 +45,7 @@ func (h *Handler) FileHandler(ctx echo.Context) error {
 
 	createdFiles, err := h.ReceiveFile(src, file.Filename, path)
 	if err != nil {
+		h.Logger.Error(err)
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 

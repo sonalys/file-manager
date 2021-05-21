@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -9,27 +10,38 @@ import (
 // ScriptConfiguration represents a script name with parameters, to be executed.
 type ScriptConfiguration struct {
 	Image      string   `json:"image"`      // Optional: Reference to the docker image to be used.
+	Name       string   `json:"name"`       // Script name.
 	Version    string   `json:"version"`    // Optional: Version of the script to be used.
 	Binary     string   `json:"binary"`     // Binary to be called on cli.
 	Parameters []string `json:"parameters"` // Binary to be called on cli.
 	Timeout    string   `json:"timeout"`    // Max execution time for the script to run.
 }
 
-func (s ScriptConfiguration) GetCommand(filename string) (string, []string) {
-	index := strings.LastIndex(filename, ".")
-
-	file := filename[:index]
-	ext := filename[index+1:]
-
+func (s ScriptConfiguration) GetCommand(name string, u UploadData) (string, []string) {
+	s.Name = name
 	for i := range s.Parameters {
-		s.Parameters[i] = strings.ReplaceAll(s.Parameters[i], "%filename", file)
-		s.Parameters[i] = strings.ReplaceAll(s.Parameters[i], "%extension", ext)
+		s.Parameters[i] = strings.ReplaceAll(s.Parameters[i], "%filename", u.Filename)
+		s.Parameters[i] = strings.ReplaceAll(s.Parameters[i], "%extension", u.Extension)
 	}
 
 	if len(s.Image) > 0 {
 		cwd, _ := os.Getwd()
-		parameters := []string{"run", "--rm", "-v", fmt.Sprintf("%s/storage:/buffer", cwd), s.GetImagePath()}
-		return s.Binary, append(parameters, s.Parameters...)
+		parameters := []string{
+			"run",
+			"--rm",
+			"-v", fmt.Sprintf("%s/storage:/buffer", cwd),
+			"-v", fmt.Sprintf("%s/scripts:/scripts", cwd),
+			s.GetImagePath(),
+			s.Binary,
+		}
+
+		serializedData, _ := json.Marshal(u)
+		serializedConfig, _ := json.Marshal(s)
+		return "docker", append(
+			parameters,
+			string(serializedData),
+			string(serializedConfig),
+		)
 	}
 	return s.Binary, s.Parameters
 }

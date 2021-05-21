@@ -34,6 +34,7 @@ func (e executor) Run(ctx context.Context, command string, arg ...string) ([]byt
 	})
 
 	pipe := exec.CommandContext(ctx, command, arg...)
+	logrus.Info(pipe.String())
 
 	logger.Debug("created pipe")
 	errPipe, err := pipe.StderrPipe()
