@@ -9,7 +9,7 @@ import (
 	"github.com/sonalys/file-manager/manager/model"
 )
 
-func (s Service) Run(scriptName, filename string) *model.ScriptOutput {
+func (s Service) Run(scriptName, filename string) *model.UploadData {
 	logger := s.Logger.WithField("script", scriptName)
 	logger.Debug("searching for script name on service")
 	script, found := s.scripts[scriptName]
@@ -38,7 +38,7 @@ func (s Service) Run(scriptName, filename string) *model.ScriptOutput {
 	}
 
 	logger.Debug("deserializing script response")
-	var scriptOutput model.ScriptOutput
+	var scriptOutput model.UploadData
 	if err := json.Unmarshal(output, &scriptOutput); err != nil {
 		logger.Error(errors.Wrap(err, "failed to deserialize script output"))
 		return nil

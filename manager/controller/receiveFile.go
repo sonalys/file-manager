@@ -14,31 +14,39 @@ import (
 
 // ResolvePath is a security validator to avoid reaching system files.
 // It also resolves any mounts configured on the service.
-func (s Service) ResolvePath(destination, filename string) (string, error) {
-	if strings.Contains(destination, "../") {
+func (s Service) ResolvePath(d *model.UploadData) (string, error) {
+	if strings.Contains(d.Destination, "../") {
 		return "", errors.New("invalid path: cannot include ../")
 	}
 
-	if strings.Contains(filename, "/") {
+	if strings.Contains(d.Filename, "/") {
 		return "", errors.New("invalid filename: cannot include /")
 	}
 
-	match, _ := regexp.MatchString(".*:.*", destination)
+	match, _ := regexp.MatchString(".*:.*", d.Destination)
 	if !match {
 		return "", errors.New("invalid destination: must have format mount:path")
 	}
 
-	splitPath := strings.Split(destination, ":")
+	splitPath := strings.Split(d.Destination, ":")
 
 	resolve, found := s.Mounts[splitPath[0]]
 	if !found {
 		return "", errors.New("invalid mount")
 	}
-	return fmt.Sprintf("%s/%s/%s", resolve, splitPath[1], filename), nil
+	return fmt.Sprintf("%s/%s/%s", resolve, splitPath[1], d.Filename), nil
 }
 
-func (s Service) ReceiveFile(reader io.Reader, filename, destination string) ([]string, error) {
-	path, err := s.ResolvePath(destination, filename)
+func (s Service) ReceiveFile(reader io.Reader, filename, destination string) (*model.UploadData, error) {
+	dotIndex := strings.LastIndex(filename, ".")
+	uploadData := &model.UploadData{
+		Filename:    filename[:dotIndex],
+		Extension:   filename[dotIndex+1:],
+		Destination: destination,
+		Metadata:    map[string]model.ScriptOutput{},
+	}
+
+	path, err := s.ResolvePath(uploadData)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse destination during file upload")
 	}
@@ -47,15 +55,11 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) ([]
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create file in destination")
 	}
-	defer dst.Close()
 
 	if _, err := io.Copy(dst, reader); err != nil {
 		return nil, errors.Wrap(err, "failed to write buffer in file destination")
 	}
-
-	metadata := map[string]*model.ScriptOutput{}
-
-	createdFiles := []string{}
+	dst.Close()
 
 	for _, rule := range s.rules {
 		match, err := rule.Match.Validate(filename, destination)
@@ -67,36 +71,22 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) ([]
 		}
 
 		for _, scriptName := range rule.Pipeline {
-			output := s.Run(scriptName, filename)
-			if output == nil {
-				continue
+			newUploadData := s.Run(scriptName, filename)
+			if newUploadData != nil {
+				uploadData = newUploadData
 			}
-
-			if len(output.MovedTo) > 0 {
-				newName := output.MovedTo[strings.LastIndex(output.MovedTo, "/")+1:]
-				path, _ = s.ResolvePath(destination, newName)
-				createdFiles = append(createdFiles, fmt.Sprintf("%s/%s", destination, newName))
-			} else {
-				createdFiles = append(createdFiles, fmt.Sprintf("%s/%s", destination, filename))
-			}
-
-			for i := range output.Children {
-				createdFiles = append(createdFiles, fmt.Sprintf("%s/%s", destination, output.Children[i]))
-			}
-
-			metadata[scriptName] = output
 		}
 
-		encodedOutput, err := json.Marshal(metadata)
+		encodedOutput, err := json.Marshal(uploadData)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to encode metadata")
 		}
 
-		err = os.WriteFile(fmt.Sprintf("%s.metadata", path), encodedOutput, os.ModeDevice)
+		err = os.WriteFile(fmt.Sprintf("%s.metadata", uploadData.GetFullPath()), encodedOutput, os.ModeDevice)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create metadata in destination")
 		}
 	}
 
-	return createdFiles, nil
+	return uploadData, nil
 }

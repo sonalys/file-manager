@@ -14,9 +14,7 @@ import (
 )
 
 type Arguments struct {
-	FromPath string `long:"from" required:"true"`
-	ToPath   string `long:"to" required:"true"`
-	Quality  int64  `long:"quality" short:"q" default:"85"`
+	data model.UploadData `long:"data" required:"true"`
 }
 
 func main() {
