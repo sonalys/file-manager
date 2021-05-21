@@ -18,3 +18,12 @@ func (s ScriptConfiguration) GetCommand() string {
 	}
 	return s.Command
 }
+
+func (s ScriptConfiguration) GetImagePath() string {
+	tag := s.Version
+	if len(s.Version) == 0 {
+		tag = "latest"
+	}
+
+	return fmt.Sprintf("%s:%s", s.Image, tag)
+}

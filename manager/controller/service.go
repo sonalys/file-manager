@@ -11,6 +11,7 @@ type Service struct {
 	rules    []model.Rule
 	scripts  map[string]model.ScriptConfiguration
 	executor Executor
+	logger   *logrus.Logger
 	ctx      context.Context
 }
 
@@ -20,11 +21,15 @@ func NewService(ctx context.Context, c model.Config) *Service {
 		panic(err)
 	}
 
+	logger := logrus.New()
+	logger.SetLevel(level)
+
 	s := &Service{
 		ctx:      ctx,
 		scripts:  c.Scripts,
 		rules:    c.Rules,
-		executor: newExecutor(level),
+		logger:   logger,
+		executor: newExecutor(logger),
 	}
 
 	if err := s.pullImages(); err != nil {

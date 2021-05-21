@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/sonalys/file-manager/manager/model"
 )
 
 func (s Service) pullImages() error {
-	logrus.Info("Pulling script images")
+	logger := s.logger
+	logger.Info("pulling script images")
 	for _, script := range s.scripts {
 		if len(script.Image) == 0 {
 			continue
@@ -24,20 +24,21 @@ func (s Service) pullImages() error {
 }
 
 func (s Service) pullImage(script model.ScriptConfiguration) error {
-	imgPath := fmt.Sprintf("%s:%s", script.Image, script.Version)
-	logrus.Infof("Checking %s", imgPath)
+	imgPath := script.GetImagePath()
+	logger := s.logger.WithField("image", imgPath)
+	logger.Info("checking image in cache")
 
 	if s.checkImage(imgPath) {
-		logrus.Infof("%s already exists", imgPath)
+		logger.Info("version already exists")
 		return nil
 	}
 
 	_, err := s.executor.Run(s.ctx, "docker", "pull", imgPath)
 	if err != nil {
-		errors.Wrap(err, fmt.Sprintf("error pulling image %s:%s", script.Image, script.Version))
+		return errors.Wrap(err, fmt.Sprintf("error pulling image %s", imgPath))
 	}
 
-	logrus.Infof("%s downloaded", imgPath)
+	logger.Info("image downloaded")
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os/exec"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -14,39 +15,50 @@ type Executor interface {
 }
 
 type executor struct {
-	Verbosity logrus.Level
+	log *logrus.Logger
 }
 
-func newExecutor(logLevel logrus.Level) executor {
+func newExecutor(logger *logrus.Logger) executor {
 	e := executor{
-		Verbosity: logLevel,
+		log: logger,
 	}
 
 	return e
 }
 
 func (e executor) Run(ctx context.Context, command string, arg ...string) ([]byte, error) {
-	pipe := exec.CommandContext(ctx, command, arg...)
+	t1 := time.Now()
+	logger := e.log.WithFields(logrus.Fields{
+		"args":    arg,
+		"command": command,
+	})
 
+	pipe := exec.CommandContext(ctx, command, arg...)
+	logger.Debug("created pipe")
 	errPipe, err := pipe.StderrPipe()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read command stdErr")
 	}
+	logger.Debug("listening stdErr pipe")
 
 	outputPipe, err := pipe.StdoutPipe()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read command stdOut")
 	}
+	logger.Debug("listening stdOut pipe")
 
+	logger.Debug("starting command")
 	if err := pipe.Start(); err != nil {
 		return nil, errors.Wrap(err, "failed to start command")
 	}
 
+	logger.Debug("reading stdOut buffer")
 	stdOut, err := ioutil.ReadAll(outputPipe)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read command stdOut")
 	}
 
+	logger.Debug("reading stdErr buffer")
 	stdErr, err := ioutil.ReadAll(errPipe)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read command stdErr")
@@ -56,5 +68,6 @@ func (e executor) Run(ctx context.Context, command string, arg ...string) ([]byt
 		return nil, errors.New(string(stdErr))
 	}
 
+	logger.Infof("command executed in %s", time.Since(t1))
 	return stdOut, nil
 }
