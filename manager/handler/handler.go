@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -23,7 +24,9 @@ func (h *Handler) Start() {
 
 	e.Use(Logger(h.Logger))
 	e.POST("/upload", h.FileHandler)
-	e.Static("/download", "storage")
+	for mountName, resolve := range h.Mounts {
+		e.Static(fmt.Sprintf("/download/%s", mountName), resolve)
+	}
 
 	h.Logger.Fatal(e.Start(":8000"))
 }

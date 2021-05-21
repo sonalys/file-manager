@@ -10,6 +10,7 @@ import (
 type Service struct {
 	rules    []model.Rule
 	scripts  map[string]model.ScriptConfiguration
+	Mounts   map[string]string
 	executor Executor
 	Logger   *logrus.Logger
 	ctx      context.Context
@@ -28,6 +29,7 @@ func NewService(ctx context.Context, c model.Config) *Service {
 		ctx:      ctx,
 		scripts:  c.Scripts,
 		rules:    c.Rules,
+		Mounts:   c.Mounts,
 		Logger:   logger,
 		executor: newExecutor(logger),
 	}
