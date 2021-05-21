@@ -53,7 +53,7 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) err
 		return errors.Wrap(err, "failed to write buffer in file destination")
 	}
 
-	metadata := []*model.ScriptOutput{}
+	metadata := map[string]*model.ScriptOutput{}
 
 	for _, rule := range s.rules {
 		match, err := rule.Match.Validate(filename, destination)
@@ -69,7 +69,13 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) err
 			if output == nil {
 				continue
 			}
-			metadata = append(metadata, output)
+
+			if len(output.MovedTo) > 0 {
+				newName := output.MovedTo[strings.LastIndex(output.MovedTo, "/")+1:]
+				path, _ = s.ResolvePath(destination, newName)
+			}
+
+			metadata[scriptName] = output
 		}
 
 		encodedOutput, err := json.Marshal(metadata)

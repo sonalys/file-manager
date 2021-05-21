@@ -7,7 +7,7 @@
     "compress2heic": {
       "image": "file-manager/imagemagick",
       "version": "v0.0.1",
-      "parameters": ["convert", "-quality", "65", "/buffer/%filename.%extension", "/buffer/%filename.heic"],
+      "parameters": ["./script", "-q", "65", "--from", "/buffer/%filename.%extension", "--to", "/buffer/%filename.heic"],
       "binary": "docker",
       "timeout": "5s"
     }

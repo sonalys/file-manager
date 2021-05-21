@@ -35,15 +35,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	output = model.ScriptOutput{
+	output := model.ScriptOutput{
 		MovedTo: opts.ToPath,
 	}
 
 	serialized, err := json.Marshal(output)
-	if err := os.Remove(opts.FromPath); err != nil {
+	if err != nil {
 		logrus.Error(err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Print(serialized)
+	fmt.Print(string(serialized))
 }
