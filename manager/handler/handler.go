@@ -43,9 +43,10 @@ func (h *Handler) FileHandler(ctx echo.Context) error {
 	}
 	defer src.Close()
 
-	if err := h.ReceiveFile(src, file.Filename, path); err != nil {
+	createdFiles, err := h.ReceiveFile(src, file.Filename, path)
+	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.NoContent(http.StatusOK)
+	return ctx.JSON(http.StatusOK, createdFiles)
 }

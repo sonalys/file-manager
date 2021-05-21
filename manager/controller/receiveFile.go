@@ -37,28 +37,30 @@ func (s Service) ResolvePath(destination, filename string) (string, error) {
 	return fmt.Sprintf("%s/%s/%s", resolve, splitPath[1], filename), nil
 }
 
-func (s Service) ReceiveFile(reader io.Reader, filename, destination string) error {
+func (s Service) ReceiveFile(reader io.Reader, filename, destination string) ([]string, error) {
 	path, err := s.ResolvePath(destination, filename)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse destination during file upload")
+		return nil, errors.Wrap(err, "failed to parse destination during file upload")
 	}
 
 	dst, err := os.Create(path)
 	if err != nil {
-		return errors.Wrap(err, "failed to create file in destination")
+		return nil, errors.Wrap(err, "failed to create file in destination")
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, reader); err != nil {
-		return errors.Wrap(err, "failed to write buffer in file destination")
+		return nil, errors.Wrap(err, "failed to write buffer in file destination")
 	}
 
 	metadata := map[string]*model.ScriptOutput{}
 
+	createdFiles := []string{}
+
 	for _, rule := range s.rules {
 		match, err := rule.Match.Validate(filename, destination)
 		if err != nil {
-			return errors.Wrap(err, "failed to check rule conditions")
+			return nil, errors.Wrap(err, "failed to check rule conditions")
 		}
 		if !match {
 			continue
@@ -73,6 +75,13 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) err
 			if len(output.MovedTo) > 0 {
 				newName := output.MovedTo[strings.LastIndex(output.MovedTo, "/")+1:]
 				path, _ = s.ResolvePath(destination, newName)
+				createdFiles = append(createdFiles, fmt.Sprintf("%s/%s", destination, newName))
+			} else {
+				createdFiles = append(createdFiles, fmt.Sprintf("%s/%s", destination, filename))
+			}
+
+			for i := range output.Children {
+				createdFiles = append(createdFiles, fmt.Sprintf("%s/%s", destination, output.Children[i]))
 			}
 
 			metadata[scriptName] = output
@@ -80,14 +89,14 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) err
 
 		encodedOutput, err := json.Marshal(metadata)
 		if err != nil {
-			return errors.Wrap(err, "failed to encode metadata")
+			return nil, errors.Wrap(err, "failed to encode metadata")
 		}
 
 		err = os.WriteFile(fmt.Sprintf("%s.metadata", path), encodedOutput, os.ModeDevice)
 		if err != nil {
-			return errors.Wrap(err, "failed to create metadata in destination")
+			return nil, errors.Wrap(err, "failed to create metadata in destination")
 		}
 	}
 
-	return nil
+	return createdFiles, nil
 }
