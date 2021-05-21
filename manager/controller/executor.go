@@ -10,7 +10,7 @@ import (
 )
 
 type Executor interface {
-	Run(context.Context, string, ...string) (<-chan []byte, <-chan error)
+	Run(context.Context, string, ...string) ([]byte, error)
 }
 
 type executor struct {
@@ -25,38 +25,36 @@ func newExecutor(logLevel logrus.Level) executor {
 	return e
 }
 
-func (e executor) Run(ctx context.Context, command string, arg ...string) (<-chan []byte, <-chan error) {
-	var respChan chan []byte
-	var errChan chan error
-	cmd := exec.CommandContext(ctx, command, arg...)
-	go func() {
-		if err := cmd.Run(); err != nil {
-			errChan <- err
-			return
-		}
-		stdErr, err := cmd.StderrPipe()
-		if err != nil {
-			errChan <- err
-			return
-		}
+func (e executor) Run(ctx context.Context, command string, arg ...string) ([]byte, error) {
+	pipe := exec.CommandContext(ctx, command, arg...)
 
-		errOutput, err := ioutil.ReadAll(stdErr)
-		switch true {
-		case err != nil:
-			errChan <- err
-			return
-		case len(errOutput) > 0:
-			errChan <- errors.New(string(errOutput))
-			return
-		}
+	errPipe, err := pipe.StderrPipe()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read command stdErr")
+	}
 
-		output, err := cmd.Output()
-		if err != nil {
-			errChan <- err
-			return
-		}
-		respChan <- output
-	}()
+	outputPipe, err := pipe.StdoutPipe()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read command stdOut")
+	}
 
-	return respChan, errChan
+	if err := pipe.Start(); err != nil {
+		return nil, errors.Wrap(err, "failed to start command")
+	}
+
+	stdOut, err := ioutil.ReadAll(outputPipe)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read command stdOut")
+	}
+
+	stdErr, err := ioutil.ReadAll(errPipe)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read command stdErr")
+	}
+
+	if len(stdErr) > 0 {
+		return nil, errors.New(string(stdErr))
+	}
+
+	return stdOut, nil
 }
