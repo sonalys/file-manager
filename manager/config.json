@@ -1,0 +1,19 @@
+{
+  "log_level": "error",
+  "scripts": {
+    "compress2heic": {
+      "image": "babylonia-imagemagick",
+      "version": "v0.0.1",
+      "command": "convert -quality 65 1.jpg 1.heic",
+      "timeout": "5s"
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "filename": "*.(jpg|jpeg|bmp|png)"
+      },
+      "pipeline": ["compress2heic"]
+    }
+  ]
+}
