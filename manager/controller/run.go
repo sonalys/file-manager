@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/sonalys/file-manager/manager/model"
 )
 
 func (s Service) Run(scriptName string, upload model.UploadData) *model.UploadData {
-	logger := s.Logger.WithField("script", scriptName)
+	logger := s.Logger.WithFields(logrus.Fields{
+		"scriptName": scriptName,
+	})
 	logger.Debug("searching for script name on service")
 	script, found := s.scripts[scriptName]
 	if !found {

@@ -8,8 +8,15 @@
       "image": "docker.pkg.github.com/sonalys/file-manager/imagemagick",
       "version": "v0.0.1",
       "parameters": ["-quality", "65"],
-      "binary": "./scripts/compress2heic",
+      "binary": "/scripts/compress2heic",
       "timeout": "5s"
+    },
+    "detectron2": {
+      "image": "docker.pkg.github.com/sonalys/file-manager/detectron2",
+      "version": "v0.0.1",
+      "parameters": [],
+      "binary": "/scripts/detectron2",
+      "timeout": "20s"
     }
   },
   "rules": [
@@ -17,7 +24,7 @@
       "match": {
         "filename": ".*\\.(jpg|jpeg|bmp|png)"
       },
-      "pipeline": ["compress2heic"]
+      "pipeline": ["detectron2","compress2heic"]
     }
   ]
 }

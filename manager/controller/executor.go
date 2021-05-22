@@ -28,12 +28,11 @@ func newExecutor(logger *logrus.Logger) executor {
 
 func (e executor) Run(ctx context.Context, command string, arg ...string) ([]byte, error) {
 	t1 := time.Now()
-	logger := e.log.WithFields(logrus.Fields{
-		"args":    arg,
-		"command": command,
-	})
-
 	pipe := exec.CommandContext(ctx, command, arg...)
+
+	logger := e.log.WithFields(logrus.Fields{
+		"script": pipe.String(),
+	})
 
 	logger.Debug("created pipe")
 	errPipe, err := pipe.StderrPipe()
@@ -64,11 +63,10 @@ func (e executor) Run(ctx context.Context, command string, arg ...string) ([]byt
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read command stdErr")
 	}
+	logger.Infof("command executed in %s", time.Since(t1))
 
 	if len(stdErr) > 0 {
 		return nil, errors.New(string(stdErr))
 	}
-
-	logger.Infof("command executed in %s", time.Since(t1))
 	return stdOut, nil
 }

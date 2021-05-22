@@ -1,7 +1,9 @@
 import time
 import os
+import sys
+import json
 
-from PIL.Image import Image
+from PIL import Image
 
 from misc.image import rotate_exif
 from classification.model import ImageClassifier
@@ -9,17 +11,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_ADDRESS = "http://" + os.getenv("BASE_ADDRESS", 'localhost:4000')
-MEDIA_ADDRESS = BASE_ADDRESS + '/media/thumb_'
-LABEL_ADDRESS = BASE_ADDRESS + '/labels'
-FETCH_INTERVAL = int(os.getenv("FETCH_INTERVAL", '5'))
-
 def main():
+    args = sys.argv[1:]
     im_clf = ImageClassifier()
-    time.sleep(FETCH_INTERVAL)
-    im = Image.load("/buffer/1.jpg")
-    im = rotate_exif(im)
-    prediction = im_clf.predict(im)
+    time.sleep(5)
+    with Image.open(args[0]) as im:
+        im = rotate_exif(im)
+        prediction = im_clf.predict(im)
+        with open("/dump.json", "a") as dump:
+            dump.write(json.dumps(prediction))
 
 
 if __name__ == "__main__":
