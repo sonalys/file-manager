@@ -5,7 +5,7 @@
   },
   "scripts": {
     "compress2heic": {
-      "image": "file-manager/imagemagick",
+      "image": "docker.pkg.github.com/sonalys/file-manager/imagemagick",
       "version": "v0.0.1",
       "parameters": ["-quality", "65"],
       "binary": "./scripts/compress2heic",

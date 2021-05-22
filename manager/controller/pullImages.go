@@ -33,6 +33,7 @@ func (s Service) pullImage(script model.ScriptConfiguration) error {
 		return nil
 	}
 
+	logger.Info("downloading image")
 	_, err := s.executor.Run(s.ctx, "docker", "pull", imgPath)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("error pulling image %s", imgPath))
