@@ -13,23 +13,6 @@ import (
 	"github.com/sonalys/file-manager/manager/model"
 )
 
-func contains(slice []string, item string) bool {
-	for i := range slice {
-		if slice[i] == item {
-			return true
-		}
-	}
-	return false
-}
-
-func appendUnique(slice []string, item string) []string {
-	if contains(slice, item) {
-		return slice
-	}
-
-	return append(slice, item)
-}
-
 func main() {
 	var data model.UploadData
 	var config model.ScriptConfiguration
@@ -47,7 +30,7 @@ func main() {
 
 	t1 := time.Now()
 	file := fmt.Sprintf("/buffer/%s", data.GetFullName())
-	cmd := exec.Command("python3", "/app/main.py", file)
+	cmd := exec.Command("python3", append([]string{"/app/main.py", file}, config.Parameters...)...)
 
 	scriptOutput, err := cmd.CombinedOutput()
 	if err != nil {
@@ -55,7 +38,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var tags []string
+	var tags []interface{}
 	reader, err := os.Open("/dump.json")
 	if err != nil {
 		logrus.Error(errors.Wrap(err, "failed to open dump.json"))
@@ -73,14 +56,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	var uniqueTags []string
-
-	for i := range tags {
-		uniqueTags = appendUnique(uniqueTags, tags[i])
-	}
-
 	output := model.ScriptOutput{
-		Metadata:      uniqueTags,
+		Metadata:      tags,
 		ExecutionTime: time.Since(t1),
 		LastRun:       t1,
 		Log:           string(scriptOutput),

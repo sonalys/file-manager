@@ -21,12 +21,11 @@ def detect(filename, threshold):
     im = darknet.load_image(bytes(filename, "ascii"), 0, 0)
     r = darknet.detect_image(network, class_names, im, thresh=threshold)
     darknet.free_image(im)
-    print(r)
-    return [item[0] for item in r]
+    return r
 
 def main():
     args = sys.argv[1:]
-    prediction = detect(args[0], 0.25)
+    prediction = detect(args[0], float(args[1]))
     with open("/dump.json", "a") as dump:
         dump.write(json.dumps(prediction))
 
