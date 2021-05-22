@@ -5,12 +5,20 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sonalys/file-manager/manager/model"
 )
+
+func (s Service) ResolveMount(destination string) string {
+	splitPath := strings.Split(destination, ":")
+	resolve := s.Mounts[splitPath[0]]
+	abs, _ := filepath.Abs(filepath.Join(resolve, splitPath[1]))
+	return abs
+}
 
 // ResolvePath is a security validator to avoid reaching system files.
 // It also resolves any mounts configured on the service.
@@ -27,21 +35,14 @@ func (s Service) ResolvePath(d *model.UploadData) (string, error) {
 	if !match {
 		return "", errors.New("invalid destination: must have format mount:path")
 	}
-
-	splitPath := strings.Split(d.Destination, ":")
-
-	resolve, found := s.Mounts[splitPath[0]]
-	if !found {
-		return "", errors.New("invalid mount")
-	}
-	return fmt.Sprintf("%s/%s/%s", resolve, splitPath[1], d.GetFullName()), nil
+	return filepath.Join(s.ResolveMount(d.Destination), d.GetFullName()), nil
 }
 
 func (s Service) ReceiveFile(reader io.Reader, filename, destination string) (*model.UploadData, error) {
-	dotIndex := strings.LastIndex(filename, ".")
+	ext := filepath.Ext(filename)
 	uploadData := &model.UploadData{
-		Filename:    filename[:dotIndex],
-		Extension:   filename[dotIndex+1:],
+		Filename:    strings.TrimSuffix(filename, ext),
+		Extension:   ext,
 		Destination: destination,
 		Metadata:    map[string]model.ScriptOutput{},
 	}
@@ -49,6 +50,11 @@ func (s Service) ReceiveFile(reader io.Reader, filename, destination string) (*m
 	path, err := s.ResolvePath(uploadData)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse destination during file upload")
+	}
+
+	err = os.MkdirAll(s.ResolveMount(destination), os.ModeDevice)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create subfolders in destination")
 	}
 
 	dst, err := os.Create(path)

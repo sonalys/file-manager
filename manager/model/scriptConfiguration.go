@@ -17,7 +17,7 @@ type ScriptConfiguration struct {
 	Timeout    string   `json:"timeout"`    // Max execution time for the script to run.
 }
 
-func (s ScriptConfiguration) GetCommand(name string, u UploadData) (string, []string) {
+func (s ScriptConfiguration) GetCommand(location, name string, u UploadData) (string, []string) {
 	s.Name = name
 	for i := range s.Parameters {
 		s.Parameters[i] = strings.ReplaceAll(s.Parameters[i], "%filename", u.Filename)
@@ -29,7 +29,7 @@ func (s ScriptConfiguration) GetCommand(name string, u UploadData) (string, []st
 		parameters := []string{
 			"run",
 			"--rm",
-			"-v", fmt.Sprintf("%s/storage:/buffer", cwd),
+			"-v", fmt.Sprintf("%s:/buffer", location),
 			"-v", fmt.Sprintf("%s/scripts:/scripts", cwd),
 			s.GetImagePath(),
 			s.Binary,

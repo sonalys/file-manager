@@ -21,7 +21,7 @@ func main() {
 
 	t1 := time.Now()
 	from := fmt.Sprintf("/buffer/%s", data.GetFullName())
-	data.Extension = "heic"
+	data.Extension = ".heic"
 	to := fmt.Sprintf("/buffer/%s", data.GetFullName())
 	cmd := exec.Command("convert", append(config.Parameters, from, to)...)
 

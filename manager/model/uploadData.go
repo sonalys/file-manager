@@ -1,6 +1,8 @@
 package model
 
-import "fmt"
+import (
+	"path/filepath"
+)
 
 // UploadData serves as generic script input data structure.
 type UploadData struct {
@@ -13,10 +15,10 @@ type UploadData struct {
 
 // GetFullName returns the filename and extension. Example: photo.jpg.
 func (u UploadData) GetFullName() string {
-	return fmt.Sprintf("%s.%s", u.Filename, u.Extension)
+	return u.Filename + u.Extension
 }
 
 // GetFullPath returns the absolute path with filename and extension. Example: /media/photo.jpg.
 func (u UploadData) GetFullPath() string {
-	return fmt.Sprintf("%s/%s", u.Destination, u.GetFullName())
+	return filepath.Join(u.Destination, u.GetFullName())
 }

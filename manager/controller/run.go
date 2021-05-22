@@ -30,7 +30,7 @@ func (s Service) Run(scriptName string, upload model.UploadData) *model.UploadDa
 	defer cancel()
 
 	logger.Info("started script")
-	binary, parameters := script.GetCommand(scriptName, upload)
+	binary, parameters := script.GetCommand(s.ResolveMount(upload.Destination), scriptName, upload)
 	output, err := s.executor.Run(timeoutCtx, binary, parameters...)
 	if err != nil {
 		logger.Error(errors.Wrap(err, "failed to execute script command"))
