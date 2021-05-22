@@ -31,7 +31,7 @@ func (e executor) Run(ctx context.Context, command string, arg ...string) ([]byt
 	pipe := exec.CommandContext(ctx, command, arg...)
 
 	logger := e.log.WithFields(logrus.Fields{
-		"script": pipe.String(),
+		"command": command,
 	})
 
 	logger.Debug("created pipe")

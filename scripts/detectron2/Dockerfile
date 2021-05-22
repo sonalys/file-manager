@@ -5,8 +5,6 @@ WORKDIR /code
 RUN apt-get update
 RUN apt-get install libgl1-mesa-glx -y
 
-COPY requirements.txt .
-
 RUN apt-get update \
     && apt-get install -y libsm6 libxext6 libxrender-dev \
     && wget https://awma1-my.sharepoint.com/:u:/g/personal/yuz_l0_tn/EaXvCC3WjtlLvvEfLr3oa8UBLA21tcLh4L8YLbYXl6jgjg?download=1 -O 'bua-caffe-frcn-r101_with_attributes.pth' \
@@ -22,8 +20,10 @@ RUN apt-get update \
     && cd .. \
     && python setup.py build develop
 
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+WORKDIR /app
 COPY src/ .
 
 CMD ["/bin/sh"]

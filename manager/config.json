@@ -16,7 +16,14 @@
       "version": "v0.0.1",
       "parameters": [],
       "binary": "/scripts/detectron2",
-      "timeout": "20s"
+      "timeout": "60s"
+    },
+    "yolo": {
+      "image": "docker.pkg.github.com/sonalys/file-manager/yolo",
+      "version": "v0.0.1-openimages",
+      "parameters": [],
+      "binary": "/scripts/detectron2",
+      "timeout": "60s"
     }
   },
   "rules": [
@@ -24,7 +31,7 @@
       "match": {
         "filename": ".*\\.(jpg|jpeg|bmp|png)"
       },
-      "pipeline": ["detectron2","compress2heic"]
+      "pipeline": ["yolo","compress2heic"]
     }
   ]
 }

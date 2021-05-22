@@ -6,9 +6,11 @@ import torch
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.engine import DefaultTrainer
+
 from models.bua import add_bottom_up_attention_config
-from utils.extract_utils import get_image_blob
 from models.bua.layers.nms import nms
+
+from utils.extract_utils import get_image_blob
 
 sys.path.append("bottom-up-attention.pytorch")
 

@@ -47,7 +47,7 @@ func main() {
 
 	t1 := time.Now()
 	file := fmt.Sprintf("/buffer/%s", data.GetFullName())
-	cmd := exec.Command("python", "main.py", file)
+	cmd := exec.Command("python3", "/app/main.py", file)
 
 	scriptOutput, err := cmd.CombinedOutput()
 	if err != nil {
