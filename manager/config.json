@@ -19,11 +19,11 @@
       "timeout": "60s"
     },
     "yolo": {
-      "image": "docker.pkg.github.com/sonalys/file-manager/yolo",
-      "version": "v0.0.1-openimages",
-      "parameters": ["0.2"],
-      "binary": "/scripts/detectron2",
-      "timeout": "60s"
+      "image": "docker.io/ultralytics/yolov5",
+      "version": "latest",
+      "parameters": ["--name", "exp", "--weights", "/scripts/yolo/yolov5x6.pt"],
+      "binary": "/scripts/yolo/yolo",
+      "timeout": "30s"
     }
   },
   "rules": [
@@ -31,7 +31,7 @@
       "match": {
         "filename": ".*\\.(jpg|jpeg|bmp|png)"
       },
-      "pipeline": ["yolo","compress2heic"]
+      "pipeline": ["yolo"]
     }
   ]
 }
