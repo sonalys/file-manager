@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/sonalys/file-manager/manager/model"
 )
@@ -36,7 +34,7 @@ func (s Service) pullImage(script model.ScriptConfiguration) error {
 	logger.Info("downloading image")
 	_, err := s.executor.Run(s.ctx, "docker", "pull", imgPath)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("error pulling image %s", imgPath))
+		return errors.Wrap(err, "error pulling image")
 	}
 
 	logger.Info("image downloaded")

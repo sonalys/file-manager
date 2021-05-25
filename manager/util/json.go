@@ -3,13 +3,13 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 )
 
 func read(path string) ([]byte, error) {
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("couldn't read the file %s", path))
 	}
